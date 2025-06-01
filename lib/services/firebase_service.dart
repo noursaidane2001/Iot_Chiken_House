@@ -35,7 +35,19 @@ class FirebaseService {
       print('Erreur lors du contrôle de la LED: $e');
     }
   }
-
+// Obtenir la distance
+  Future<double?> getDistance() async {
+    try {
+      final snapshot = await _database.child('distance').get();
+      if (snapshot.exists) {
+        return double.tryParse(snapshot.value.toString());
+      }
+      return null;
+    } catch (e) {
+      print('Erreur lors de la récupération de la distance: $e');
+      return null;
+    }
+  }
   // Contrôler la climatisation
   Future<void> controlAirConditioner(bool isOn) async {
     try {

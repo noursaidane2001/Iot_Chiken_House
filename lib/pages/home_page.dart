@@ -52,6 +52,7 @@ class _HomePageState extends State<HomePage> {
   // Sensor data
   double? temperature;
   double? humidity;
+  double? distance; // Ajout de la variable distance
   bool movement = false;
   bool isConnected = false;
 
@@ -72,6 +73,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           temperature = double.tryParse(data['temperature']?.toString() ?? '0');
           humidity = double.tryParse(data['humidity']?.toString() ?? '0');
+          distance = double.tryParse(data['distance']?.toString() ?? '0'); // Ajout de la distance
           movement = data['mouvement'] == 1;
           deviceStates['lib/icons/Lights.png'] = data['led'] == 1;
           deviceStates['lib/icons/IChouse.png'] = data['airConditioner'] == 1;
@@ -98,6 +100,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           temperature = double.tryParse(data['temperature']?.toString() ?? '0');
           humidity = double.tryParse(data['humidity']?.toString() ?? '0');
+          distance = double.tryParse(data['distance']?.toString() ?? '0'); // Ajout de la distance
           movement = data['mouvement'] == 1;
           deviceStates['lib/icons/Lights.png'] = data['led'] == 1;
           deviceStates['lib/icons/IChouse.png'] = data['airConditioner'] == 1;
@@ -280,7 +283,7 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 12),
                         _buildSensorCard('Humid', '${humidity?.toStringAsFixed(1) ?? '--'}%', Icons.water_drop),
                         const SizedBox(width: 12),
-                        _buildSensorCard('Motion', movement ? 'Detected' : 'Calm', Icons.motion_photos_on),
+                        _buildSensorCard('Water Level', '${distance?.toStringAsFixed(1) ?? '--'} mm',Icons.waves), // Remplacé Motion par Distance
                       ],
                     ),
                   ],
@@ -477,6 +480,7 @@ class _HomePageState extends State<HomePage> {
         content = 'Chickens State:\n'
             'Temperature: ${temperature?.toStringAsFixed(1) ?? '--'}°C\n'
             'Humidity: ${humidity?.toStringAsFixed(1) ?? '--'}%\n'
+            'Distance: ${distance?.toStringAsFixed(1) ?? '--'} cm\n' // Ajout de la distance dans les détails
             'Movement detected: ${movement ? 'Yes' : 'No'}';
         break;
     }

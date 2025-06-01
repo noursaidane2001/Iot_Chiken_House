@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> {
 
   final List<String> deviceNames = [
     'Temperature',
-    'Air Conditioning',
+    'AC',
     'Lights',
     'Garden Plants',
     'Irrigation',

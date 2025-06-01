@@ -46,6 +46,15 @@ class FirebaseService {
       print('Erreur lors du contrôle de la climatisation: $e');
     }
   }
+  // Add this method to your FirebaseService class in firebase_service.dart
+
+  Future<void> controlLightAuto(bool state) async {
+    try {
+      await _database.child('lightAuto').set(state ? 1 : 0);
+    } catch (e) {
+      throw Exception('Failed to control light auto mode: $e');
+    }
+  }
 
   // Contrôler le mode automatique de la climatisation
   Future<void> controlAirConditionerAuto(bool isAuto) async {

@@ -17,16 +17,16 @@ class _HomePageState extends State<HomePage> {
     'lib/icons/HouseTempture.png',
     'lib/icons/IChouse.png',
     'lib/icons/Lights.png',
-    'lib/icons/Plants.png',
+    'lib/icons/Chicken.png',
     'lib/icons/WaterOnPlants.png',
   ];
 
   final List<String> deviceNames = [
     'Temperature',
-    'AC',
-    'Lights',
-    'Garden Plants',
-    'Irrigation',
+    ' ',
+    '',
+    'Chickens',
+    ' ',
   ];
 
   final List<String> iconsWithButton = [
@@ -35,19 +35,21 @@ class _HomePageState extends State<HomePage> {
     'lib/icons/WaterOnPlants.png',
   ];
 
-  // États des appareils synchronisés avec Firebase
+  // Device states synchronized with Firebase
   Map<String, bool> deviceStates = {
     'lib/icons/IChouse.png': false,
     'lib/icons/Lights.png': false,
     'lib/icons/WaterOnPlants.png': false,
   };
 
+  // Mode automatique pour tous les appareils contrôlables
   Map<String, bool> autoModeStates = {
     'lib/icons/IChouse.png': false,
+    'lib/icons/Lights.png': false,  // Ajout du mode auto pour les lumières
     'lib/icons/WaterOnPlants.png': false,
   };
 
-  // Données des capteurs
+  // Sensor data
   double? temperature;
   double? humidity;
   bool movement = false;
@@ -62,7 +64,7 @@ class _HomePageState extends State<HomePage> {
     _listenToFirebaseChanges();
   }
 
-  // Initialiser la connexion Firebase et récupérer les données initiales
+  // Initialize Firebase connection and retrieve initial data
   void _initializeFirebaseConnection() async {
     try {
       final data = await _firebaseService.getSensorData();
@@ -75,19 +77,20 @@ class _HomePageState extends State<HomePage> {
           deviceStates['lib/icons/IChouse.png'] = data['airConditioner'] == 1;
           deviceStates['lib/icons/WaterOnPlants.png'] = data['irrigation'] == 1;
           autoModeStates['lib/icons/IChouse.png'] = data['airConditionerAuto'] == 1;
+          autoModeStates['lib/icons/Lights.png'] = data['lightAuto'] == 1;  // Récupération du mode auto LED
           autoModeStates['lib/icons/WaterOnPlants.png'] = data['irrigationAuto'] == 1;
           isConnected = true;
         });
       }
     } catch (e) {
-      print('Erreur d\'initialisation: $e');
+      print('Initialization error: $e');
       setState(() {
         isConnected = false;
       });
     }
   }
 
-  // Écouter les changements en temps réel
+  // Listen to real-time changes
   void _listenToFirebaseChanges() {
     _firebaseService.listenToSensorData().listen((DatabaseEvent event) {
       if (event.snapshot.exists) {
@@ -100,19 +103,20 @@ class _HomePageState extends State<HomePage> {
           deviceStates['lib/icons/IChouse.png'] = data['airConditioner'] == 1;
           deviceStates['lib/icons/WaterOnPlants.png'] = data['irrigation'] == 1;
           autoModeStates['lib/icons/IChouse.png'] = data['airConditionerAuto'] == 1;
+          autoModeStates['lib/icons/Lights.png'] = data['lightAuto'] == 1;  // Écoute du mode auto LED
           autoModeStates['lib/icons/WaterOnPlants.png'] = data['irrigationAuto'] == 1;
           isConnected = true;
         });
       }
     }, onError: (error) {
-      print('Erreur de connexion Firebase: $error');
+      print('Firebase connection error: $error');
       setState(() {
         isConnected = false;
       });
     });
   }
 
-  // Contrôler les appareils via Firebase
+  // Control devices via Firebase
   void _controlDevice(String iconPath, bool newState) async {
     try {
       if (iconPath == 'lib/icons/Lights.png') {
@@ -123,10 +127,10 @@ class _HomePageState extends State<HomePage> {
         await _firebaseService.controlIrrigation(newState);
       }
 
-      // L'état sera mis à jour automatiquement via le listener
+      // State will be automatically updated via the listener
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${_getDeviceName(iconPath)} ${newState ? 'activé' : 'désactivé'}'),
+          content: Text('${_getDeviceName(iconPath)} ${newState ? 'activated' : 'deactivated'}'),
           backgroundColor: mainColor,
           duration: const Duration(seconds: 2),
         ),
@@ -134,7 +138,7 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur: Impossible de contrôler l\'appareil'),
+          content: Text('Error: Unable to control device'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 2),
         ),
@@ -142,19 +146,22 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Contrôler le mode automatique
+  // Control automatic mode
   void _controlAutoMode(String iconPath, bool newState) async {
     try {
       if (iconPath == 'lib/icons/IChouse.png') {
         await _firebaseService.controlAirConditionerAuto(newState);
+      } else if (iconPath == 'lib/icons/Lights.png') {
+        // Ajout du contrôle automatique pour les LED
+        await _firebaseService.controlLightAuto(newState);
       } else if (iconPath == 'lib/icons/WaterOnPlants.png') {
         await _firebaseService.controlIrrigationAuto(newState);
       }
 
-      // L'état sera mis à jour automatiquement via le listener
+      // State will be automatically updated via the listener
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Mode auto ${_getDeviceName(iconPath)} ${newState ? 'activé' : 'désactivé'}'),
+          content: Text('Auto mode ${_getDeviceName(iconPath)} ${newState ? 'activated' : 'deactivated'}'),
           backgroundColor: mainColor,
           duration: const Duration(seconds: 2),
         ),
@@ -162,7 +169,7 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur: Impossible de contrôler le mode automatique'),
+          content: Text('Error: Unable to control automatic mode'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 2),
         ),
@@ -172,7 +179,7 @@ class _HomePageState extends State<HomePage> {
 
   String _getDeviceName(String iconPath) {
     final index = deviceIcons.indexOf(iconPath);
-    return index != -1 ? deviceNames[index] : 'Appareil';
+    return index != -1 ? deviceNames[index] : 'Device';
   }
 
   @override
@@ -196,7 +203,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header avec indicateur de connexion
+            // Header with connection indicator
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
@@ -205,7 +212,7 @@ class _HomePageState extends State<HomePage> {
                   _buildHeaderButton('lib/icons/chickenOnTheHouse.png'),
                   Row(
                     children: [
-                      // Indicateur de connexion
+                      // Connection indicator
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
@@ -222,7 +229,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              isConnected ? 'Connecté' : 'Déconnecté',
+                              isConnected ? 'Connected' : 'Disconnected',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -265,7 +272,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Affichage des données de capteurs
+                  // Sensor data display
                   if (isConnected) ...[
                     Row(
                       children: [
@@ -273,7 +280,7 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 12),
                         _buildSensorCard('Humid', '${humidity?.toStringAsFixed(1) ?? '--'}%', Icons.water_drop),
                         const SizedBox(width: 12),
-                        _buildSensorCard('Mouv', movement ? 'Détecté' : 'Calme', Icons.motion_photos_on),
+                        _buildSensorCard('Motion', movement ? 'Detected' : 'Calm', Icons.motion_photos_on),
                       ],
                     ),
                   ],
@@ -345,24 +352,23 @@ class _HomePageState extends State<HomePage> {
                         if (hasButton)
                           Row(
                             children: [
-                              if (iconPath != 'lib/icons/Lights.png') ...[
-                                Text(
-                                  autoModeStates[iconPath] ?? false ? 'AUTO' : 'MANUAL',
-                                  style: TextStyle(
-                                    color: autoModeStates[iconPath] ?? false ? mainColor : Colors.white70,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              // Mode automatique pour tous les appareils contrôlables
+                              Text(
+                                autoModeStates[iconPath] ?? false ? 'AUTO' : 'MANUAL',
+                                style: TextStyle(
+                                  color: autoModeStates[iconPath] ?? false ? mainColor : Colors.white70,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                const SizedBox(width: 8),
-                                Switch(
-                                  activeColor: mainColor,
-                                  value: autoModeStates[iconPath] ?? false,
-                                  onChanged: isConnected ? (val) {
-                                    _controlAutoMode(iconPath, val);
-                                  } : null,
-                                ),
-                                const SizedBox(width: 16),
-                              ],
+                              ),
+                              const SizedBox(width: 8),
+                              Switch(
+                                activeColor: mainColor,
+                                value: autoModeStates[iconPath] ?? false,
+                                onChanged: isConnected ? (val) {
+                                  _controlAutoMode(iconPath, val);
+                                } : null,
+                              ),
+                              const SizedBox(width: 16),
                               Text(
                                 isOn ? 'ON' : 'OFF',
                                 style: TextStyle(
@@ -383,7 +389,7 @@ class _HomePageState extends State<HomePage> {
                         else
                           GestureDetector(
                             onTap: () {
-                              // Afficher les détails du capteur
+                              // Show sensor details
                               _showSensorDetails(deviceIndex);
                             },
                             child: Text(
@@ -464,14 +470,14 @@ class _HomePageState extends State<HomePage> {
 
     switch (deviceIndex) {
       case 0: // Temperature
-        content = 'Température actuelle: ${temperature?.toStringAsFixed(1) ?? '--'}°C\n'
-            'Humidité: ${humidity?.toStringAsFixed(1) ?? '--'}%';
+        content = 'Current temperature: ${temperature?.toStringAsFixed(1) ?? '--'}°C\n'
+            'Humidity: ${humidity?.toStringAsFixed(1) ?? '--'}%';
         break;
-      case 3: // Garden Plants
-        content = 'État du jardin:\n'
-            'Température: ${temperature?.toStringAsFixed(1) ?? '--'}°C\n'
-            'Humidité: ${humidity?.toStringAsFixed(1) ?? '--'}%\n'
-            'Mouvement détecté: ${movement ? 'Oui' : 'Non'}';
+      case 3: // Chickens
+        content = 'Chickens State:\n'
+            'Temperature: ${temperature?.toStringAsFixed(1) ?? '--'}°C\n'
+            'Humidity: ${humidity?.toStringAsFixed(1) ?? '--'}%\n'
+            'Movement detected: ${movement ? 'Yes' : 'No'}';
         break;
     }
 
@@ -484,7 +490,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Fermer', style: TextStyle(color: mainColor)),
+            child: Text('Close', style: TextStyle(color: mainColor)),
           ),
         ],
       ),
